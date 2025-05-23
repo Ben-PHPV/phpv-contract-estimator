@@ -2,10 +2,13 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Home route
+@app.route('/')
+def home():
+    return "PHPV Contract Estimator is live!"
+
 @app.route('/estimate', methods=['POST'])
 def estimate():
-    return jsonify({"message": "This is working."})
+    return jsonify({"message": "This works!"})
 
 # Contract estimation route
 @app.route('/estimate', methods=['POST'])
