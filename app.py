@@ -5,7 +5,7 @@ app = Flask(__name__)
 # Home route
 @app.route('/')
 def home():
-    return "NHL Contract Estimator is live!"
+    return "PHPV Contract Estimator is live!"
 
 # Contract estimation route
 @app.route('/estimate', methods=['POST'])
