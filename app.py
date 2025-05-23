@@ -2,14 +2,14 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Home route
 @app.route('/')
 def home():
-    return "NHL Contract Estimator is live!"
+    return "PHPV Contract Estimator is live!"
 
-# Contract estimation route
 @app.route('/estimate', methods=['POST'])
 def estimate():
+    # This should only respond to POST
+    return jsonify({"message": "POST to /estimate is working!"})
     data = request.json
 
     # Get input values from JSON request
