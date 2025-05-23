@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PHPV Contract Estimator</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    input, select, button { display: block; margin: 10px 0; width: 100%; padding: 8px; }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    #result { margin-top: 20px; font-weight: bold; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h2>PHPV Contract Estimator</h2>
+
+  <form id="estimatorForm">
+    <input type="number" step="0.01" name="GoalsPerGame" placeholder="Goals per Game" required>
+    <input type="number" step="0.01" name="AssistsPerGame" placeholder="Assists per Game" required>
+    <input type="number" name="TOIPerGame" placeholder="Time on Ice per Game" required>
+    <input type="number" name="PlusMinus" placeholder="Plus/Minus" required>
+    <input type="number" step="0.1" name="CF_percent" placeholder="Corsi For %" required>
+    <input type="number" name="xG" placeholder="Expected Goals (xG)" required>
+    <input type="number" name="Age" placeholder="Age" required>
+    <input type="number" name="GamesMissed" placeholder="Games Missed" required>
+    <input type="number" step="0.01" name="CapSpaceNormalized" placeholder="Cap Space Normalized (0-1)" required>
+    
+    <select name="Position" required>
+      <option value="">Select Position</option>
+      <option value="Center">Center</option>
+      <option value="Winger">Winger</option>
+      <option value="Defenseman">Defenseman</option>
+      <option value="Goalie">Goalie</option>
+    </select>
+
+    <label>
+      <input type="checkbox" name="IsRFA"> Is RFA?
+    </label>
+
+    <button type="submit">Estimate AAV</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    document.getElementById("estimatorForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+
+      const data = {
+        GoalsPerGame: parseFloat(formData.get("GoalsPerGame")),
+        AssistsPerGame: parseFloat(formData.get("AssistsPerGame")),
+        TOIPerGame: parseFloat(formData.get("TOIPerGame")),
+        PlusMinus: parseFloat(formData.get("PlusMinus")),
+        CF_percent: parseFloat(formData.get("CF_percent")),
+        xG: parseFloat(formData.get("xG")),
+        Age: parseInt(formData.get("Age")),
+        GamesMissed: parseInt(formData.get("GamesMissed")),
+        CapSpaceNormalized: parseFloat(formData.get("CapSpaceNormalized")),
+        Position: formData.get("Position"),
+        IsRFA: formData.get("IsRFA") ? 1 : 0
+      };
+
+      const resultBox = document.getElementById("result");
+      resultBox.textContent = "Calculating...";
+
+      try {
+        const res = await fetch("https://phpv-contract-estimator.onrender.com/estimate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        resultBox.textContent = `Estimated AAV: $${result.EstimatedAAV} million`;
+      } catch (err) {
+        resultBox.textContent = "Error: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
