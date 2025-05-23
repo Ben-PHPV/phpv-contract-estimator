@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: nhl-contract-estimator
+    name: phpv-contract-estimator
     env: python
     buildCommand: ""
     startCommand: gunicorn app:app
