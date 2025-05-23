@@ -10,9 +10,6 @@ def home():
 def estimate():
     return jsonify({"message": "This works!"})
 
-# Contract estimation route
-@app.route('/estimate', methods=['POST'])
-def estimate():
     data = request.json
 
     goals = data.get("GoalsPerGame", 0)
