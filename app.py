@@ -48,3 +48,5 @@ def estimate():
 
     return jsonify({"EstimatedAAV": round(estimated_aav, 2)})
 
+Test minimal POST /estimate route
+
