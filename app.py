@@ -12,7 +12,6 @@ def home():
 def estimate():
     data = request.json
 
-    # Get input values from JSON request
     goals = data.get("GoalsPerGame", 0)
     assists = data.get("AssistsPerGame", 0)
     toi = data.get("TOIPerGame", 0)
@@ -25,7 +24,6 @@ def estimate():
     cap_space = data.get("CapSpaceNormalized", 0)
     position = data.get("Position", "Center")
 
-    # Encode position to numerical effect (example values)
     position_offset = {
         "Center": 0,
         "Winger": 0.2,
@@ -33,9 +31,8 @@ def estimate():
         "Goalie": -0.6
     }.get(position, 0)
 
-    # Estimate AAV using linear model
     estimated_aav = (
-        1.25 +                         # Intercept
+        1.25 +
         3.0 * goals +
         2.5 * assists +
         0.1 * toi +
@@ -50,3 +47,4 @@ def estimate():
     )
 
     return jsonify({"EstimatedAAV": round(estimated_aav, 2)})
+
