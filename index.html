@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PHPV Contract Estimator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    input, select, button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h2>PHPV Contract Estimator</h2>
+  <form id="estimatorForm">
+    <label for="PlayerType">Player Type</label>
+    <select name="PlayerType" id="PlayerType" required>
+      <option value="">Select Player Type</option>
+      <option value="Forward">Forward</option>
+      <option value="Defenseman">Defenseman</option>
+    </select>
+
+    <input type="number" step="0.01" name="GoalsPerGame" placeholder="Goals per Game" required>
+    <input type="number" step="0.01" name="AssistsPerGame" placeholder="Assists per Game" required>
+    <input type="number" name="TOIPerGame" placeholder="Time on Ice per Game" required>
+    <input type="number" name="PlusMinus" placeholder="Plus/Minus" required>
+    <input type="number" step="0.1" name="CF_percent" placeholder="Corsi For %" required>
+    <input type="number" name="xG" placeholder="Expected Goals (xG)" required>
+    <input type="number" name="Age" placeholder="Age" required>
+    <input type="number" name="GamesMissed" placeholder="Games Missed" required>
+    <input type="number" step="0.01" name="CapSpaceNormalized" placeholder="Cap Space Normalized (0-1)" required>
+
+    <select name="Position" required>
+      <option value="">Select Position</option>
+      <option value="Center">Center</option>
+      <option value="Winger">Winger</option>
+      <option value="Defenseman">Defenseman</option>
+      <option value="Goalie">Goalie</option>
+    </select>
+
+    <label><input type="checkbox" name="IsRFA"> Is RFA?</label>
+
+    <div id="defensemanFields" style="display: none;">
+      <input type="number" step="0.1" name="BlockedShotsPerGame" placeholder="Blocked Shots per Game">
+      <input type="number" step="0.1" name="HitsPerGame" placeholder="Hits per Game">
+      <input type="number" step="0.1" name="TakeawaysPerGame" placeholder="Takeaways per Game">
+      <input type="number" step="0.1" name="TurnoversPerGame" placeholder="Turnovers per Game">
+    </div>
+
+    <button type="submit">Estimate AAV</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+    const form = document.getElementById("estimatorForm");
+    const playerType = document.getElementById("PlayerType");
+    const defenseFields = document.getElementById("defensemanFields");
+
+    playerType.addEventListener("change", () => {
+      defenseFields.style.display = playerType.value === "Defenseman" ? "block" : "none";
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData);
+      data.IsRFA = formData.get("IsRFA") ? 1 : 0;
+
+      for (let key in data) {
+        if (!isNaN(data[key])) data[key] = parseFloat(data[key]);
+      }
+
+      try {
+        const response = await fetch("https://phpv-contract-estimator.onrender.com/estimate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        document.getElementById("result").innerHTML = `<br><strong>Estimated AAV:</strong> $${result.EstimatedAAV} million`;
+      } catch (err) {
+        document.getElementById("result").textContent = "Error: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
