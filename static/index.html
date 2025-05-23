@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,6 +43,7 @@
       <option value="">Select Player Type</option>
       <option value="Forward">Forward</option>
       <option value="Defenseman">Defenseman</option>
+      <option value="Goalie">Goalie</option>
     </select>
 
     <input type="number" step="0.01" name="GoalsPerGame" placeholder="Goals per Game" required>
@@ -56,14 +56,26 @@
     <input type="number" name="GamesMissed" placeholder="Games Missed" required>
     <input type="number" step="0.01" name="CapSpaceNormalized" placeholder="Cap Space Normalized (0-1)" required>
 
-
     <label><input type="checkbox" name="IsRFA"> Is RFA?</label>
 
+    <!-- Defenseman Fields -->
     <div id="defensemanFields" style="display: none;">
       <input type="number" step="0.1" name="BlockedShotsPerGame" placeholder="Blocked Shots per Game">
       <input type="number" step="0.1" name="HitsPerGame" placeholder="Hits per Game">
       <input type="number" step="0.1" name="TakeawaysPerGame" placeholder="Takeaways per Game">
       <input type="number" step="0.1" name="TurnoversPerGame" placeholder="Turnovers per Game">
+    </div>
+
+    <!-- Goalie Fields -->
+    <div id="goalieFields" style="display: none;">
+      <input type="number" step="0.001" name="SavePercentage" placeholder="Save Percentage (.900-.930)">
+      <input type="number" step="0.01" name="GAA" placeholder="Goals Against Average (GAA)">
+      <input type="number" name="GamesStarted" placeholder="Games Started">
+      <input type="number" name="Wins" placeholder="Wins">
+      <input type="number" name="Shutouts" placeholder="Shutouts">
+      <input type="number" step="0.001" name="HighDangerSV" placeholder="High-Danger Save %">
+      <input type="number" step="0.001" name="MediumDangerSV" placeholder="Medium-Danger Save %">
+      <input type="number" step="0.001" name="LowDangerSV" placeholder="Low-Danger Save %">
     </div>
 
     <button type="submit">Estimate AAV</button>
@@ -74,9 +86,11 @@
     const form = document.getElementById("estimatorForm");
     const playerType = document.getElementById("PlayerType");
     const defenseFields = document.getElementById("defensemanFields");
+    const goalieFields = document.getElementById("goalieFields");
 
     playerType.addEventListener("change", () => {
       defenseFields.style.display = playerType.value === "Defenseman" ? "block" : "none";
+      goalieFields.style.display = playerType.value === "Goalie" ? "block" : "none";
     });
 
     form.addEventListener("submit", async (e) => {
