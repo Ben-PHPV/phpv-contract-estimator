@@ -1,54 +1,93 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
 app = Flask(__name__, static_folder="static")
 CORS(app)
+
 @app.route("/")
 def serve_estimator():
     return send_from_directory(app.static_folder, "index.html")
 
-@app.route('/')
-def home():
-    return "PHPV Contract Estimator is live!"
-
-@app.route('/estimate', methods=['POST'])
+@app.route("/estimate", methods=["POST"])
 def estimate():
     data = request.json
+    player_type = data.get("PlayerType")
 
-    goals = data.get("GoalsPerGame", 0)
-    assists = data.get("AssistsPerGame", 0)
-    toi = data.get("TOIPerGame", 0)
-    plus_minus = data.get("PlusMinus", 0)
-    cf = data.get("CF_percent", 50)
-    xg = data.get("xG", 0)
+    # Extract shared fields
     age = data.get("Age", 0)
-    is_rfa = int(data.get("IsRFA", 0))
-    games_missed = data.get("GamesMissed", 0)
-    cap_space = data.get("CapSpaceNormalized", 0)
-    position = data.get("Position", "Center")
+    is_rfa = data.get("IsRFA", 0)
+    cap_norm = data.get("CapSpaceNormalized", 0)
 
-    # Position coefficient encoding
-    position_offset = {
-        "Center": 0,
-        "Winger": 0.2,
-        "Defenseman": -0.3,
-        "Goalie": -0.6
-    }.get(position, 0)
+    if player_type == "Goalie":
+        # Goalie-specific fields
+        sv = data.get("SavePercentage", 0)
+        gaa = data.get("GAA", 0)
+        games = data.get("GamesStarted", 0)
+        wins = data.get("Wins", 0)
+        shutouts = data.get("Shutouts", 0)
+        hdsv = data.get("HighDangerSV", 0)
+        mdsv = data.get("MediumDangerSV", 0)
+        ldsv = data.get("LowDangerSV", 0)
 
-    # Estimated AAV based on placeholder model
-    estimated_aav = (
-        1.25 +                         # Intercept
-        3.0 * goals +
-        2.5 * assists +
-        0.1 * toi +
-        0.05 * plus_minus +
-        0.2 * cf +
-        0.12 * xg +
-        -0.08 * age +
-        0.9 * is_rfa +
-        -0.05 * games_missed +
-        4.0 * cap_space +
-        position_offset
-    )
+        # Simple estimation formula for goalies
+        base = (
+            (sv * 10) - (gaa * 2) +
+            (games * 0.05) + (wins * 0.1) + (shutouts * 0.2) +
+            ((hdsv + mdsv + ldsv) * 3) +
+            (1 if is_rfa else 0) +
+            (1 - abs(age - 27) * 0.1) +
+            (cap_norm * 2)
+        )
+        estimated_aav = round(max(base, 0), 2)
+        return jsonify({"EstimatedAAV": estimated_aav})
 
-    return jsonify({"EstimatedAAV": round(estimated_aav, 2)})
+    elif player_type == "Defenseman":
+        # Defenseman-specific fields
+        goals = data.get("GoalsPerGame", 0)
+        assists = data.get("AssistsPerGame", 0)
+        toi = data.get("TOIPerGame", 0)
+        plusminus = data.get("PlusMinus", 0)
+        cf = data.get("CF_percent", 0)
+        xg = data.get("xG", 0)
+        hits = data.get("HitsPerGame", 0)
+        blocks = data.get("BlockedShotsPerGame", 0)
+        takeaways = data.get("TakeawaysPerGame", 0)
+        turnovers = data.get("TurnoversPerGame", 0)
+        missed = data.get("GamesMissed", 0)
+
+        base = (
+            (goals + assists) * 3 + (toi * 0.1) + plusminus +
+            (cf - 50) * 0.2 + (xg * 0.5) +
+            (hits + blocks + takeaways) * 0.3 -
+            (turnovers * 0.3) -
+            (missed * 0.1) +
+            (1 if is_rfa else 0) +
+            (1 - abs(age - 27) * 0.1) +
+            (cap_norm * 2)
+        )
+        estimated_aav = round(max(base, 0), 2)
+        return jsonify({"EstimatedAAV": estimated_aav})
+
+    else:
+        # Forward/general skater logic
+        goals = data.get("GoalsPerGame", 0)
+        assists = data.get("AssistsPerGame", 0)
+        toi = data.get("TOIPerGame", 0)
+        plusminus = data.get("PlusMinus", 0)
+        cf = data.get("CF_percent", 0)
+        xg = data.get("xG", 0)
+        missed = data.get("GamesMissed", 0)
+
+        base = (
+            (goals + assists) * 4 + (toi * 0.1) + plusminus +
+            (cf - 50) * 0.2 + (xg * 0.5) -
+            (missed * 0.1) +
+            (1 if is_rfa else 0) +
+            (1 - abs(age - 27) * 0.1) +
+            (cap_norm * 2)
+        )
+        estimated_aav = round(max(base, 0), 2)
+        return jsonify({"EstimatedAAV": estimated_aav})
+
+if __name__ == "__main__":
+    app.run(debug=True)
