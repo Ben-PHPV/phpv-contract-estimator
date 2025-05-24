@@ -1,8 +1,12 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+import joblib
 
 app = Flask(__name__, static_folder="static")
 CORS(app)
+
+# Load the trained goalie model
+goalie_model = joblib.load("goalie_model.pkl")
 
 @app.route("/")
 def serve_estimator():
@@ -13,33 +17,22 @@ def estimate():
     data = request.json
     player_type = data.get("PlayerType")
 
-    # Extract shared fields
+    # Shared fields
     age = data.get("Age", 0)
     is_rfa = data.get("IsRFA", 0)
     cap_norm = data.get("CapSpaceNormalized", 0)
 
     if player_type == "Goalie":
-        # Goalie-specific fields
-        sv = data.get("SavePercentage", 0)
-        gaa = data.get("GAA", 0)
+        # Use trained goalie model
         games = data.get("GamesStarted", 0)
-        wins = data.get("Wins", 0)
-        shutouts = data.get("Shutouts", 0)
-        hdsv = data.get("HighDangerSV", 0)
-        mdsv = data.get("MediumDangerSV", 0)
-        ldsv = data.get("LowDangerSV", 0)
+        xg = data.get("xG", 0)
+        yl = data.get("YL", 1)
+        length = data.get("Length", 2)
 
-        # Simple estimation formula for goalies
-        base = (
-            (sv * 10) - (gaa * 2) +
-            (games * 0.05) + (wins * 0.1) + (shutouts * 0.2) +
-            ((hdsv + mdsv + ldsv) * 3) +
-            (1 if is_rfa else 0) +
-            (1 - abs(age - 27) * 0.1) +
-            (cap_norm * 2)
-        )
-        estimated_aav = round(max(base, 0), 2)
-        return jsonify({"EstimatedAAV": estimated_aav})
+        features = [games, xg, age, is_rfa, yl, length]
+        prediction = goalie_model.predict([features])[0]
+
+        return jsonify({"EstimatedAAV": round(prediction / 1_000_000, 2)})
 
     elif player_type == "Defenseman":
         # Defenseman-specific fields
