@@ -1,8 +1,10 @@
+from flask_cors import CORS
 from flask import Flask, request, jsonify
 import pickle
 import numpy as np
 
 app = Flask(__name__)
+CORS(app)
 
 # Load the trained model
 with open("goalie_model.pkl", "rb") as f:
