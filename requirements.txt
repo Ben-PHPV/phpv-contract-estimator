@@ -1,5 +1,4 @@
+scikit-learn==1.4.2
 flask
-flask-cors
-gunicorn
-scikit-learn
 numpy
+
