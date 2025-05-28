@@ -5,21 +5,20 @@ import numpy as np
 import os
 
 app = Flask(__name__)
-CORS(app)  # ✅ Allow requests from external sources like WordPress
+CORS(app)  # Allow cross-origin requests (e.g., WordPress)
 
-# Load model from joblib (trained for scikit-learn 1.2.2 compatibility)
-model_path = "goalie_model_compatible.joblib"
+# Load model
+model_path = "goalie_model_nocap.joblib"
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"❌ Cannot find model at {model_path}")
 
 model = joblib.load(model_path)
 
-# Must match the order used during training
+# Feature order (cap-related stats removed)
 FEATURE_ORDER = [
     "low_danger_pct", "medium_danger_pct", "high_danger_sv_pct", "sv_pct",
     "xGoals", "goals", "rebounds", "freeze", "ongoal", "saves",
-    "games_played", "icetime",
-    "Cap_hit_pct", "YL", "Length", "IsRFA"
+    "games_played", "icetime", "IsRFA"
 ]
 
 @app.route("/")
